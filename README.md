@@ -1,4 +1,4 @@
-## Graphql Nodejs Mongodb Blog API
+## API-PSYNEURAL
 
 Simple GraphQL Blog API using Nodejs and Mongodb
 
@@ -10,12 +10,15 @@ Simple GraphQL Blog API using Nodejs and Mongodb
 ### Environment variables
 
 ```
-  MONGODB_URI
+  DEV_URI_DB
   PROD_URI_DB
   PORT
   JWT_SECRET
   SECRETDECRIPT
+  ADMIN_USER
+  LOCAL_ADMIN_USER
   JWT_EXPIRES_IN
+  STATE
 ```
 
 ### Installation
