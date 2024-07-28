@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCHNotas = new Schema(
   {
-    clave: { type: String, required: true, default: uuidv4() },
+    clave: { type: String, required: true, default: uuidv4(),unique: true },
     nombre: { type: String, required: true },
     info: { type: String, required: true },
     tipo: { type: Number, required: true },

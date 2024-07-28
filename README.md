@@ -1,11 +1,23 @@
 ## API-PSYNEURAL
 
-Simple GraphQL Blog API using Nodejs and Mongodb
+api para el almacenar notas, archivos y conversaciones con el asistente
 
 ### Requerimentos
 
 - Mongodb
 - Nodejs
+- bcrypt
+- cors
+- crypto
+- dotenv
+- express
+- express
+- graphql
+- graphql
+- jsonwebtoken
+- mkdirp
+- mongoose
+- uuid
 
 ### Environment variables
 

@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCHPrompt = new Schema(
   {
-    clave: { type: String, required: true, default: uuidv4() },
+    clave: { type: String, required: true, default: uuidv4(),unique: true },
     datos: { type: String, required: true },
     respuesta: { type: String, required: true },
   },

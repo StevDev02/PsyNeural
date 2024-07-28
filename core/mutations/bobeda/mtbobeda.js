@@ -1,9 +1,7 @@
-const ENTBobeda = require('../../models/bobeda/bobeda')
-const ENTConfiguracion = require('../../models/configuracion')
+const { ENTBobeda, ENTConfiguracion, ENTBobedaprm, ENTBobedant,ENTNotas,ENTMPrompt } = require('../../models')
 const { TYBobeda, TYResponse } = require('../../types')
 const { v4: uuidv4 } = require('uuid');
 const { UTILS } = require("../../../util");
-const { SECRETDECRIPT, JWT_SECRET } = require("../../../config");
 const {
     GraphQLObjectType,
     GraphQLID,
@@ -23,11 +21,10 @@ const MTBobeda = {
         async resolve(_, { configuracion, asistente, nombre }) {
             try {
                 let status = true
-                const currentuser = global.currentuser
-                let userclave = await UTILS.decrypt(currentuser.clave)
-                const bobedasporusuario = await ENTBobeda.countDocuments().where({ usuario: userclave })
-                const existenciaConf = await ENTConfiguracion.findOne().where({ clave: configuracion })
-                const existenciaasistente = await ENTConfiguracion.findOne().where({ clave: configuracion })
+                let userclave = await UTILS.getCurrentUser()
+                const bobedasporusuario = await ENTBobeda.countDocuments({ usuario: userclave })
+                const existenciaConf = await ENTConfiguracion.findOne({ clave: configuracion })
+                const existenciaasistente = await ENTConfiguracion.findOne({ clave: configuracion })
                 if (existenciaConf.limite_bobedas == bobedasporusuario) { status = false }
                 if (!existenciaConf) { status = false }
                 if (!existenciaasistente) { status = false }
@@ -45,6 +42,7 @@ const MTBobeda = {
                     usuario: userclave,
                     nombre
                 }
+                obj.clave = uuidv4()
                 const data = new ENTBobeda(obj);
                 const resp = await data.save()
                 return {
@@ -59,11 +57,55 @@ const MTBobeda = {
         },
     },
     PUT: {
-        type: GraphQLString,
+        type: TYBobeda,
         args: {
+            configuracion: { type: new GraphQLNonNull(GraphQLString) },
+            asistente: { type: new GraphQLNonNull(GraphQLString) },
+            nombre: { type: new GraphQLNonNull(GraphQLString) },
+            clave: { type: new GraphQLNonNull(GraphQLString) },
         },
-        async resolve(_, { }) {
-
+        async resolve(_, { configuracion, asistente, nombre, clave }) {
+            let userclave = await UTILS.getCurrentUser()
+            const getbobeda = await ENTBobeda.findOne({ usuario: userclave })
+            if (!getbobeda) {
+                return {}
+            }
+            let newbobeda = {}
+            configuracion ? newbobeda[`configuracion`] = configuracion : null;
+            asistente ? newbobeda[`asistente`] = asistente : null;
+            nombre ? newbobeda[`nombre`] = nombre : null;
+            const put = await ENTBobeda.updateOne({ clave }, newbobeda)
+            const pgetbobeda = await ENTBobeda.findOne({ usuario: userclave })
+            return pgetbobeda
+        },
+    },
+    DEL: {
+        type: TYBobeda,
+        args: {
+            configuracion: { type: new GraphQLNonNull(GraphQLString) },
+            asistente: { type: new GraphQLNonNull(GraphQLString) },
+            nombre: { type: new GraphQLNonNull(GraphQLString) },
+            clave: { type: new GraphQLNonNull(GraphQLString) },
+        },
+        async resolve(_, { configuracion, asistente, nombre, clave }) {
+            let userclave = await UTILS.getCurrentUser()
+            const getbobeda = await ENTBobeda.findOne({ usuario: userclave })
+            if (!getbobeda) {
+                return {}
+            }
+            // ELIMINAMOS LAS BOBEDAS
+            const notas_bobeda = await ENTBobedant.find({ bobeda: getbobeda.clave })
+            for await(const nota of notas_bobeda){
+                const nt=await ENTNotas.findOneAndDelete({nota:nota.nota})
+                const bnt=await ENTBobedant.findOneAndDelete({clave:nota.clave})
+            }
+            // ELIMINAMOS LOS PROMPTS
+            const prmt_bobeda = await ENTBobedant.find({ bobeda: getbobeda.clave })
+            for await(const mrpt of prmt_bobeda){
+                const mrpt=await ENTMPrompt.findOneAndDelete({nota:mrpt.nota})
+                const bmrpt=await ENTBobedaprm.findOneAndDelete({clave:mrpt.clave})
+            }
+            return {}
         },
     }
 }

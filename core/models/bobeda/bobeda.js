@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCHBobeda = new Schema(
   {
-    clave: { type: String, required: true, default: uuidv4() },
+    clave: { type: String, required: true, default: uuidv4(),unique: true },
     configuracion: { type: String, required: true },
     asistente: { type: String, required: true },
     usuario: { type: String, required: true },

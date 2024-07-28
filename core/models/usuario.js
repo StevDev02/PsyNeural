@@ -23,7 +23,7 @@ const SCHUsuario = new Schema(
         "Provide a valid email",
       ],
     },
-    password: { type: String, require: true, unique: true },
+    password: { type: String, require: true, unique: false },
     code2FA: { type: String, require: false, unique: true },
     sesionActiva: { type: Number, require: true, unique: false },
     refreshToken: { type: String, require: true, unique: false },

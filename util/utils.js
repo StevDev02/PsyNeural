@@ -46,6 +46,36 @@ class UTILS {
   getresponse(status, message, data, code) {
     return { status, message, data, statusCode: code }
   }
+
+  async getCurrentUser() {
+    try {
+      const currentuser = global.currentuser
+      return await this.decrypt(currentuser.clave)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  async validarpermisos() {
+    let userclave = await this.getCurrentUser()
+    let prodcomp = userclave !== process.env.ADMIN_USER
+    let localcomp = userclave !== process.env.LOCAL_ADMIN_USER
+    let isdev = process.env.STATE == "DEV"
+    if (isdev ? localcomp : prodcomp) {
+      return {
+        status: false,
+        statusCode: 400,
+        message: "no se puede continuar no se cuenta con los permisos",
+        data: null
+      }
+    }
+    return {
+      status: true,
+      statusCode: 200,
+      message: null,
+      data: null
+    }
+  }
 }
 
 module.exports = new UTILS();

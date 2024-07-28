@@ -69,7 +69,6 @@ const MTUsuario = {
                     correo: correoec,
                     nickname: user.nickname,
                 });
-
                 return {
                     clave: user.clave,
                     nickname: user.nickname,
@@ -83,17 +82,17 @@ const MTUsuario = {
         },
     },
     PUT: {
-        type: GraphQLString,
+        type: TYUsuario,
         args: {
-            clave: { type: new GraphQLNonNull(GraphQLString) },
             nickname: { type: GraphQLString },
             correo: { type: GraphQLString },
             correoRec: { type: GraphQLString },
             password: { type: GraphQLString },
         },
-        async resolve(otros, { clave, nickname, correo, correoRec, password }) {
-            let { ip } = otros
-            let encpass=await UTILS.encryptPassword(password);
+        async resolve(otros, { nickname, correo, correoRec, password }) {
+            const currentuser = global.currentuser
+            let userclave = await UTILS.decrypt(currentuser.clave)
+            let encpass = await UTILS.encryptPassword(password);
             let objput = {}
             nickname != null || nickname != undefined ? objput[`nickname`] = nickname : null;
             correo != null || correo != undefined ? objput[`correo`] = correo : null;
@@ -103,9 +102,14 @@ const MTUsuario = {
             if (!user) {
                 return { status: false, message: "No se encontro el usuario" }
             }
-            const userput = await ENTMUsuario.updateOne(objput).where({ clave })
+            const userput = await ENTMUsuario.updateOne({ clave: userclave },objput)
+            const puser = await ENTMUsuario.findOne({ clave });
+            if (userput) {
+                return puser
 
-            return userput;
+            } else {
+                return {}
+            }
         },
     }
 }

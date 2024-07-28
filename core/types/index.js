@@ -5,7 +5,8 @@ const {
     GraphQLBoolean,
     GraphQLInt,
     GraphQLUnionType,
-    GraphQLNonNull
+    GraphQLNonNull,
+    GraphQLScalarType
 } = require("graphql");
 
 const {
@@ -17,11 +18,23 @@ const {
     ENTBobedaprm
 } = require('../models')
 
+const TYString = new GraphQLObjectType({
+    name: "string",
+    description: "simple string para el response",
+    fields: () => ({
+        msg: {
+            type: new GraphQLNonNull(GraphQLString), require: true, resolve: (args) => {
+                return args
+            }
+        }
+    })
+})
+
 const TYasistente = new GraphQLObjectType({
     name: "asistente",
     description: "tipo asistente",
     fields: () => ({
-        clave: { type: GraphQLString, require: true },
+        clave: { type: GraphQLString, require: true, unique: true },
         nombre: { type: GraphQLString, require: true },
         skin: { type: GraphQLString, require: true },
         tono_voz: { type: GraphQLString, require: true },
@@ -87,11 +100,11 @@ const TYBobedant = new GraphQLObjectType({
                 let datos = []
                 if (Array.isArray(obj)) {
                     for await (const dt of obj) {
-                        const promptData = await ENTNotas.findOne().where({ clave: obj.prompt });
+                        const promptData = await ENTNotas.findOne({ clave: obj.prompt })
                         datos.push(promptData)
                     }
                 } else {
-                    const promptData = await ENTNotas.findOne().where({ clave: obj.prompt });
+                    const promptData = await ENTNotas.findOne({ clave: obj.prompt })
                     datos.push(promptData)
                 }
                 return datos
@@ -112,11 +125,11 @@ const TYbobedaprm = new GraphQLObjectType({
                 let datos = []
                 if (Array.isArray(obj)) {
                     for await (const dt of obj) {
-                        const promptData = await ENTMPrompt.findOne().where({ clave: obj.prompt });
+                        const promptData = await ENTMPrompt.findOne({ clave: obj.prompt })
                         datos.push(promptData)
                     }
                 } else {
-                    const promptData = await ENTMPrompt.findOne().where({ clave: obj.prompt });
+                    const promptData = await ENTMPrompt.findOne({ clave: obj.prompt })
                     datos.push(promptData)
                 }
                 return datos
@@ -125,7 +138,6 @@ const TYbobedaprm = new GraphQLObjectType({
         nombre_prompt: { type: GraphQLString, required: true },
     }),
 });
-
 
 const TYBobeda = new GraphQLObjectType({
     name: "bobeda",
@@ -144,13 +156,13 @@ const TYBobeda = new GraphQLObjectType({
                     }
 
                     for await (const conf of obj) {
-                        const rep = await ENTConfiguracion.findOne().where({ clave: conf.configuracion })
+                        const rep = await ENTConfiguracion.findOne({ clave: conf.configuracion })
                         if (rep) {
                             configuraciones.push(rep)
                         }
                     }
                 } else {
-                    const rep = await ENTConfiguracion.findOne().where({ clave: obj.configuracion })
+                    const rep = await ENTConfiguracion.findOne({ clave: obj.configuracion })
                     if (rep) {
                         configuraciones.push(rep)
                     }
@@ -166,13 +178,13 @@ const TYBobeda = new GraphQLObjectType({
                         return []
                     }
                     for await (const data of obj) {
-                        const rep = await ENTAsistente.findOne().where({ clave: data.asistente })
+                        const rep = await ENTAsistente.findOne({ clave: data.asistente })
                         if (rep) {
                             asistente.push(rep)
                         }
                     }
                 } else {
-                    const rep = await ENTAsistente.findOne().where({ clave: obj.asistente })
+                    const rep = await ENTAsistente.findOne({ clave: obj.asistente })
                     if (rep) {
                         asistente.push(rep)
                     }
@@ -182,13 +194,13 @@ const TYBobeda = new GraphQLObjectType({
         },
         notas: {
             type: GraphQLList(TYBobedant), required: true, async resolve(obj) {
-                const rep = await ENTBobedant.find().where({ bobeda: obj.clave })
+                const rep = await ENTBobedant.find({ bobeda: obj.clave })
                 return rep
             }
         },
         prompt: {
             type: GraphQLList(TYbobedaprm), required: true, async resolve(obj) {
-                const rep = await ENTBobedaprm.find().where({ bobeda: obj.clave })
+                const rep = await ENTBobedaprm.find({ bobeda: obj.clave })
                 return rep
             }
         },

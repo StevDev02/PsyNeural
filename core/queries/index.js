@@ -11,7 +11,7 @@ const QYUsuario = {
         let status = true
         const currentuser = global.currentuser
         let userclave = await UTILS.decrypt(currentuser.clave)
-        const user = await ENTMUsuario.findOne().where({ clave: userclave })
+        const user = await ENTMUsuario.findOne({ clave: userclave })
         return user
     },
 }
@@ -41,7 +41,7 @@ const QYBobeda = {
             const currentuser = global.currentuser
             let userclave = await UTILS.decrypt(currentuser.clave)
             //
-            const bobeda = await ENTBobeda.find().where({ usuario: userclave })
+            const bobeda = await ENTBobeda.find({ usuario: userclave })
             return bobeda
         } catch (error) {
             throw error

@@ -2,7 +2,6 @@ const ENTAsistente = require('../models/asistente')
 const { TYasistente } = require('../types')
 const { v4: uuidv4 } = require('uuid');
 const { UTILS } = require("../../util");
-const { SECRETDECRIPT, JWT_SECRET } = require("../../config");
 const {
     GraphQLObjectType,
     GraphQLID,
@@ -25,28 +24,46 @@ const MTAsistente = {
                 skin,
                 tono_voz,
             }
-            const currentuser = global.currentuser
-            let userclave = await UTILS.decrypt(currentuser.clave)
-            let prodcomp=userclave!==process.env.ADMIN_USER
-            let localcomp=userclave!==process.env.LOCAL_ADMIN_USER
-            if(!(process.env.STATE=="DEV"?localcomp:prodcomp)){
-                return {}
+            const permisos = await UTILS.validarpermisos()
+            if (!permisos.status) {
+                return permisos
             }
-            const existe = await ENTAsistente.findOne().where(obj)
+            obj.clave=uuidv4()
+            const existe = await ENTAsistente.findOne(obj)
             if (existe) {
                 return existe
             }
             const data = new ENTAsistente(obj);
             const resp = data.save()
-            return resp
+            if (resp) {
+                return resp
+
+            } else {
+                return {}
+            }
         },
     },
-    PUT: {
+    DEL: {
         type: TYasistente,
         args: {
+            clave: { type: new GraphQLNonNull(GraphQLString) },
         },
-        async resolve(_, { }) {
+        async resolve(_, { clave }) {
+            const permisos = await UTILS.validarpermisos()
+            if (!permisos.status) {
+                return permisos
+            }
+            const existe = await ENTAsistente.findOne({ clave: clave })
+            if (!existe) {
+                return {}
+            }
+            const resp = await ENTAsistente.findOneAndDelete({ clave: clave })
+            if (resp) {
+                return {}
 
+            } else {
+                return {}
+            }
         },
     }
 }

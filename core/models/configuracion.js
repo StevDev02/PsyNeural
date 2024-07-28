@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCHConfiguracion = new Schema(
   {
-    clave: { type: String, required: true, default: uuidv4() },
+    clave: { type: String, required: true, default: uuidv4(),unique: true },
     idioma: { type: Number, required: true },
     font_size: { type: Number, required: true },
     fuente: { type: String, required: true },

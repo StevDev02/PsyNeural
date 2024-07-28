@@ -3,7 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 
 const SCHAsistente = new Schema(
   {
-    clave: { type: String, required: true, default: uuidv4() },
+    clave: { type: String, required: true, default: uuidv4(),unique: true },
     nombre: { type: String, required: true },
     skin: { type: String, required: true },
     tono_voz: { type: String, required: true },

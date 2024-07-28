@@ -24,9 +24,15 @@ const MutationType = new GraphQLObjectType({
     description: "Mutations",
     fields: {
         MTConfiguracionPOST: MTConfiguracion.POST,
+        MTConfiguracionDEL: MTConfiguracion.DEL,
+        //
         MTAsistentePOST: MTAsistente.POST,
+        MTAsistenteDEL: MTAsistente.DEL,
+        //
         MTBobedaPOST: MTBobeda.POST,
+        //
         MTBobedaprmPOST: MTBobedaprm.POST,
+        //
         MTBobedantPOST: MTBobedant.POST,
     },
 });
