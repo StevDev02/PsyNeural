@@ -6,6 +6,7 @@ const schema = require("./graphql/schema");
 const schemadentro = require("./graphql/schema_dentro");
 const { authenticate } = require("./middleware/auth");
 const cors = require('cors')
+const CONF=require('./config')
 
 var root = {
     ip(parent, datos) {
@@ -15,19 +16,18 @@ var root = {
     },
 }
 
-// const root = {
-//     uploadFile: ({ file }) => {
-//       // Decodificar el string Base64
-//       const buffer = Buffer.from(file, 'base64');
-
-//       // Guardar el archivo en el sistema de archivos
-//       fs.writeFileSync('output.file', buffer);
-
-//       return true;
-//     }
-//   };
-
 const app = express();
+app.use((err, req, res, next) => {
+    try {
+        if (process.env.STATE != "PROD") {
+            console.log(err)
+        }
+        return next()
+    } catch (error) {
+        console.error(error)
+        return next()
+    }
+})
 app.use(express.json({ limit: '7mb' }));
 app.use(cors({
     origin: ['http://localhost:3000', '*'],
@@ -79,21 +79,12 @@ app.use(
             }),
     })
 );
-app.use((err, req, res, next) => {
-    try {
-        if (process.env.STATE != "PROD") {
-            console.log(err)
-        }
-        return next()
-    } catch (error) {
-        console.error(error1)
-        return next()
-    }
-})
+
 connectDB();
 app.listen(PORT, () => {
     try {
         if (process.env.STATE != "PROD") {
+            console.log(CONF.MONGODB_URI)
             console.log("ON")
         }
     } catch (error) {

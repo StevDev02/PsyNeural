@@ -14,6 +14,7 @@ const {
 const MTConfiguracion = {
     POST: {
         type: TYConfiguracion,
+        description:"Crea configuraciones pre establecidas solo para el admin",
         args: {
             idioma: { type: new GraphQLNonNull(GraphQLInt) },
             font_size: { type: new GraphQLNonNull(GraphQLInt) },
@@ -47,6 +48,7 @@ const MTConfiguracion = {
     },
     DEL: {
         type: TYConfiguracion,
+        description:"Elimina configuraciones pre establecidas solo para el admin",
         args: {
             clave: { type: new GraphQLNonNull(GraphQLString) },
         },

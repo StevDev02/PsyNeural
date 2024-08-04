@@ -2,7 +2,6 @@ const ENTMUsuario = require('../models/usuario')
 const { TYUsuario } = require('../types')
 const { v4: uuidv4 } = require('uuid');
 const { UTILS } = require("../../util");
-const { SECRETDECRIPT, JWT_SECRET } = require("../../config");
 const {
     GraphQLObjectType,
     GraphQLID,
@@ -14,6 +13,7 @@ const {
 const MTUsuario = {
     register: {
         type: TYUsuario,
+        description:"registro del usuario",
         args: {
             nickname: { type: new GraphQLNonNull(GraphQLString) },
             correo: { type: new GraphQLNonNull(GraphQLString) },
@@ -35,8 +35,12 @@ const MTUsuario = {
 
             const resp = await user.save();
 
+            const claveec = await UTILS.encrypt(user.clave)
+            const correoec = await UTILS.encrypt(user.correo)
             const token = UTILS.createJWTToken({
-                clave: userobj.clave, nickname: userobj.nickname, correo: userobj.correo
+                clave: claveec,
+                correo: correoec,
+                nickname: user.nickname,
             });
             return {
                 clave: userobj.clave,
@@ -49,15 +53,16 @@ const MTUsuario = {
     },
     login: {
         type: TYUsuario,
+        description:"inicio de sesion",
         args: {
             correo: { type: new GraphQLNonNull(GraphQLString) },
             password: { type: new GraphQLNonNull(GraphQLString) },
         },
         async resolve(post, args, context, rootV) {
             try {
-                const user = await ENTMUsuario.findOne({ correo: args.correo }).select("+password");
+                const user = await ENTMUsuario.findOne({ correo: args.correo })//.select("+password");
 
-                if (!user) throw new Error("nombre de usuario invalido");
+                if (!user) throw new Error("correo de usuario invalido");
 
                 const validPassword = await UTILS.comparePassword(args.password, user.password);
 
@@ -83,6 +88,7 @@ const MTUsuario = {
     },
     PUT: {
         type: TYUsuario,
+        description:"Actualizar los datos del usuario en sesión",
         args: {
             nickname: { type: GraphQLString },
             correo: { type: GraphQLString },

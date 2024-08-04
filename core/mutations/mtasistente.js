@@ -13,6 +13,7 @@ const {
 const MTAsistente = {
     POST: {
         type: TYasistente,
+        description:"Crea asistentes pre establecidas solo para el admin",
         args: {
             nombre: { type: new GraphQLNonNull(GraphQLString) },
             skin: { type: new GraphQLNonNull(GraphQLString) },
@@ -45,6 +46,7 @@ const MTAsistente = {
     },
     DEL: {
         type: TYasistente,
+        description:"Elimina asistentes pre establecidas solo para el admin",
         args: {
             clave: { type: new GraphQLNonNull(GraphQLString) },
         },

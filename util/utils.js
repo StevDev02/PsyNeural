@@ -3,7 +3,13 @@ const { JWT_EXPIRES_IN, JWT_SECRET, SECRETDECRIPT } = require("../config");
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
 
+
+
 class UTILS {
+  constructor() {
+    
+  }
+
   generateKey(secret) {
     return crypto.createHash('sha256').update(secret).digest('hex');
   }

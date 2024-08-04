@@ -1,11 +1,15 @@
 const { ENTBobedant, ENTConfiguracion, ENTBobeda, ENTNotas } = require('../../models')
 const { v4: uuidv4 } = require('uuid');
 const { UTILS } = require("../../../util");
+const CONF = require('../../../config')
 const { TYBobedant } = require('../../types')
-
+const { SpeechClient } = require('@google-cloud/speech');
+const path = require('path');
 const os = require('os');
-const fs = require('fs');
+const tmp = require('tmp');
+const fs = require('fs').promises;
 const mkdirp = require('mkdirp');
+
 const {
     GraphQLObjectType,
     GraphQLID,
@@ -13,183 +17,219 @@ const {
     GraphQLList,
     GraphQLNonNull,
     GraphQLScalarType,
-    GraphQLInt
+    GraphQLInt,
+    GraphQLError
 } = require("graphql");
 
 const MTBobedant = {
     POST: {
         type: TYBobedant,
+        description: "Mutación para crear notas se proporciona la bóveda donde sera almacenado el datos asi como la info ya sea texto o archivo los archivo deben seguir la siguiente sintaxis {'file':{'mime':'audio/mpeg','data': . si no se detecta el mime retomara como texto",
         args: {
             bobeda: { type: new GraphQLNonNull(GraphQLString) },
             nombre: { type: new GraphQLNonNull(GraphQLString) },
             info: { type: new GraphQLNonNull(GraphQLString) },
-            tipo: { type: new GraphQLNonNull(GraphQLInt) },
-            formato: { type: new GraphQLNonNull(GraphQLInt) },
             nombre_carpeta: { type: new GraphQLNonNull(GraphQLString) },
         },
-        async resolve(_, { bobeda, nombre, info, tipo, formato, nombre_carpeta }) {
+        async resolve(_, { bobeda, nombre, info, nombre_carpeta }) {
             try {
-                let status = true
-                const currentuser = global.currentuser
-                let userclave = await UTILS.decrypt(currentuser.clave)
-                const bobedaobj = await ENTBobeda.findOne({ clave: bobeda, usuario: userclave })
-                //
-                const existenciaConf = await ENTConfiguracion.findOne({ clave: bobedaobj.configuracion })
-                const prmsbobeda = await ENTBobedant.countDocuments({ bobeda: bobedaobj.clave })
-                if (existenciaConf.limite_notas == prmsbobeda) {
-                    status = false
+                let status = true;
+                let userclave = await UTILS.getCurrentUser();
+                let bobedaobj = await ENTBobeda.findOne({ usuario: userclave, clave: bobeda }); // Cambiado a findOne para obtener un solo objeto
+                if (!bobedaobj) return new GraphQLError("No se encontró la bobeda");
+
+                const existenciaConf = await ENTConfiguracion.findOne({ clave: bobedaobj.configuracion });
+                const prmsbobeda = await ENTBobedant.countDocuments({ bobeda: bobedaobj.clave });
+                if (existenciaConf.limite_notas === prmsbobeda) {
+                    status = false;
                 }
                 if (!status) {
-                    return {}
+                    return new GraphQLError("Lo siento alcanzaste el limite de notas");
                 }
 
-                const objnota = { nombre, info, tipo, formato }
-                //
-                // 1. Generate and create temporary folder
-                const tempFolderName = `${os.tmpdir()}/upload-${Math.random().toString(36).substr(2, 9)}`;
-                await mkdirp(tempFolderName);
-                console.log('Temporary folder created:', tempFolderName);
+                info = JSON.parse(info).file;
+                if (!Object.keys(CONF.MIMESSOPORTADOSAUDIO).includes(info.mime)) {
+                    if (Object.keys(MIMESSOPORTADOSFOTOS).includes(info.mime)) {
+                        let tipoFormato = Object.keys(CONF.MIMESSOPORTADOSFOTOS).indexOf(info.mime);
+                        const objnota = { nombre, info, tipo: tipoFormato, formato: tipoFormato };
+                        const setnota = await ENTNotas.updateOne({ bobeda, nota }, objnota);
+                        const objbobedant = { nombre_carpeta, nota: setnota.clave };
+                        const setnotabobeda = ENTBobedant.updateOne({ bobeda }, objbobedant);
+                        const respbobedant = await ENTBobedant.findOne({ nota, bobeda })
 
-                // 2. Convert base64 to Buffer and write to temporary file
-                const buffer = Buffer.from(base64, 'base64');
-                const tempFilePath = `${tempFolderName}/${filename}`;
-                const tempFile = fs.createWriteStream(tempFilePath);
-                tempFile.write(buffer);
-                tempFile.end();
+                        return respbobedant;
+                    } else {
+                        // se toma como tipo texto
+                        const objnota = { nombre, info, tipo: -1, formato: -1 };
+                        const setnota = new ENTNotas(objnota);
+                        setnota.clave = uuidv4();
+                        await setnota.save();
 
-                // 3. Perform file validation (using tempFilePath)
-                // 1. MIME Type Validation
-                const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif']; // Replace with your allowed types
-                if (!allowedMimeTypes.includes(mimetype)) {
-                    throw new Error(`Invalid MIME type: ${mimetype}. Allowed types: ${allowedMimeTypes.join(', ')}`);
-                }
+                        const objbobedant = { bobeda, nombre_carpeta, nota: setnota.clave };
+                        const setnotabobeda = new ENTBobedant(objbobedant);
+                        setnotabobeda.clave = uuidv4();
+                        const respbobedant = await setnotabobeda.save();
 
-                // 2. File Size Validation
-                const maxFileSize = 1024 * 1024 * 5; // 5 MB in bytes
-                const stats = await fs.promises.stat(tempFilePath);
-                if (stats.size > maxFileSize) {
-                    throw new Error(`File size exceeds limit: ${stats.size} bytes. Maximum: ${maxFileSize} bytes`);
-                }
-
-                // 3. (Optional) Format Validation (Image Extension)
-                if (mimetype.startsWith('image/')) {
-                    const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Replace with your supported extensions
-                    const fileExtension = path.extname(filename).toLowerCase();
-                    if (!supportedExtensions.includes(fileExtension)) {
-                        throw new Error(`Invalid file extension: ${fileExtension}. Supported extensions: ${supportedExtensions.join(', ')}`);
+                        return respbobedant;
                     }
                 }
 
-                // 4. (Optional) Cleanup temporary folder
-                try {
-                    await fs.promises.rmrf(tempFolderName);
-                    console.log('Temporary folder removed:', tempFolderName);
-                } catch (err) {
-                    console.error('Error removing temporary folder:', err);
-                    // Handle error appropriately
-                }
+                let tipoFormato = Object.keys(CONF.MIMESSOPORTADOSAUDIO).indexOf(info.mime);
+                const objnota = { nombre, info, tipo: tipoFormato, formato: tipoFormato };
 
-                // 5. Return response based on validation results
-                // ...
-                //
-                const setnota = new ENTNotas(objnota)
-                setnota.clave=uuidv4()
-                const respnotas = await setnota.save()
-                const objbobedant = { bobeda, nombre_carpeta, nota: setnota.clave }
-                const setnotabobeda = new ENTBobedant(objbobedant)
-                setnotabobeda.clave=uuidv4()
-                const respbobedant = await setnotabobeda.save()
-                return respbobedant
+                const reqtospech = {
+                    config: {
+                        encoding: 'LINEAR16', // Indica que el audio está en base64
+                        sampleRateHertz: 16000, // Tasa de muestreo (ajusta según tu audio)
+                        languageCode: 'es-ES', // Código de idioma (español de España)
+                    },
+                    audio: {
+                        content: info.data, // Reemplaza con tu audio en base64
+                    },
+                };
+
+                // Crear un directorio temporal
+                const tempDir = tmp.dirSync({ unsafeCleanup: true });
+                const tempFilePath = path.join(tempDir.name, 'credentials.json');
+
+                // Asegúrate de que GOOGLE_APPLICATION_CREDENTIALS contenga un JSON válido
+                const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+                const jsonString = JSON.stringify(credentials, null, 2);
+
+                // Escribir el contenido en el archivo temporal
+                await fs.writeFile(tempFilePath, jsonString, 'utf8');
+
+                // Establecer la ruta del archivo temporal en la variable de entorno
+                process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath;
+
+                // Crear el cliente de Speech
+                const client_speech = new SpeechClient();
+                const cliente = await client_speech.recognize(reqtospech);
+
+                if (cliente && cliente.results && cliente.results.length > 0) {
+                    const textoReconocido = cliente.results[0].alternatives[0].transcript;
+                    objnota.info = textoReconocido;
+
+                    const setnota = new ENTNotas(objnota);
+                    setnota.clave = uuidv4();
+                    await setnota.save();
+
+                    const objbobedant = { bobeda, nombre_carpeta, nota: setnota.clave };
+                    const setnotabobeda = new ENTBobedant(objbobedant);
+                    setnotabobeda.clave = uuidv4();
+                    const respbobedant = await setnotabobeda.save();
+
+                    return respbobedant;
+                } else {
+                    return new GraphQLError("No se pudo obtener el texto");
+                }
             } catch (err) {
-                console.error('Error creating temporary folder:', err);
-                throw err; // Handle error appropriately
+                return new GraphQLError(err);
+            } finally {
+                tempDir.removeCallback();
             }
         },
     },
     PUT: {
         type: GraphQLString,
+        description:"Mutación para actualizar notas se proporciona la bóveda donde sera almacenado el datos asi como la info ya sea texto o archivo los archivo deben seguir la siguiente sintaxis {'file':{'mime':'audio/mpeg','data': . si no se detecta el mime retomara como texto",
         args: {
             bobeda: { type: new GraphQLNonNull(GraphQLString) },
             nota: { type: new GraphQLNonNull(GraphQLString) },
             nombre_carpeta: { type: new GraphQLNonNull(GraphQLString) },
             nombre: { type: new GraphQLNonNull(GraphQLString) },
-            info: { type: new GraphQLNonNull(GraphQLString) },
-            tipo: { type: new GraphQLNonNull(GraphQLInt) },
-            formato: { type: new GraphQLNonNull(GraphQLInt) },
+            info: { type: new GraphQLNonNull(GraphQLString) }
         },
-        async resolve(_, { nota, bobeda, nombre, info, tipo, formato, nombre_carpeta }) {
+        async resolve(_, { nota, bobeda, nombre, info, nombre_carpeta }) {
             try {
-                let status = true
-                let userclave = await UTILS.getCurrentUser()
-                const bobedaobj = await ENTBobeda.findOne({ clave: bobeda, usuario: userclave })
-                //
-                const existenciaConf = await ENTConfiguracion.findOne({ clave: bobedaobj.configuracion })
-                const prmsbobeda = await ENTBobedant.countDocuments({ bobeda: bobedaobj.clave })
-                if (existenciaConf.limite_notas == prmsbobeda) {
-                    status = false
+                let status = true;
+                let userclave = await UTILS.getCurrentUser();
+                let bobedaobj = await ENTBobeda.findOne({ usuario: userclave, clave: bobeda }); // Cambiado a findOne para obtener un solo objeto
+                if (!bobedaobj) return new GraphQLError("No se encontró la bobeda");
+                const pertenecenota = await ENTBobedant.findOne({ bobeda, nota })
+                if (!pertenecenota) {
+                    return new GraphQLError("No se encontró la nota");
+                }
+                const existenciaConf = await ENTConfiguracion.findOne({ clave: bobedaobj.configuracion });
+                const prmsbobeda = await ENTBobedant.countDocuments({ bobeda: bobedaobj.clave });
+                if (existenciaConf.limite_notas === prmsbobeda) {
+                    status = false;
                 }
                 if (!status) {
-                    return {}
+                    return new GraphQLError("Lo siento alcanzaste el limite de notas");
                 }
 
-                const objnota = { nombre, info, tipo, formato }
-                //
-                // 1. Generate and create temporary folder
-                const tempFolderName = `${os.tmpdir()}/upload-${Math.random().toString(36).substr(2, 9)}`;
-                await mkdirp(tempFolderName);
-                console.log('Temporary folder created:', tempFolderName);
+                info = JSON.parse(info).file;
+                if (!Object.keys(CONF.MIMESSOPORTADOSAUDIO).includes(info.mime)) {
+                    if (Object.keys(MIMESSOPORTADOSFOTOS).includes(info.mime)) {
+                        let tipoFormato = Object.keys(CONF.MIMESSOPORTADOSFOTOS).indexOf(info.mime);
+                        const objnota = { nombre, info, tipo: tipoFormato, formato: tipoFormato };
+                        const setnota = await ENTNotas.updateOne({ bobeda, nota }, objnota);
+                        const objbobedant = { nombre_carpeta, nota: setnota.clave };
+                        const setnotabobeda = ENTBobedant.updateOne({ bobeda }, objbobedant);
+                        const respbobedant = await ENTBobedant.findOne({ nota, bobeda })
 
-                // 2. Convert base64 to Buffer and write to temporary file
-                const buffer = Buffer.from(base64, 'base64');
-                const tempFilePath = `${tempFolderName}/${filename}`;
-                const tempFile = fs.createWriteStream(tempFilePath);
-                tempFile.write(buffer);
-                tempFile.end();
+                        return respbobedant;
+                    } else {
+                        // se toma como tipo texto
+                        const objnota = { nombre, info, tipo: -1, formato: -1 };
+                        const setnota = await ENTNotas.updateOne({ bobeda, nota }, objnota);
+                        const objbobedant = { nombre_carpeta, nota: setnota.clave };
+                        const setnotabobeda = ENTBobedant.updateOne({ bobeda }, objbobedant);
+                        const respbobedant = await ENTBobedant.findOne({ nota, bobeda })
 
-                // 3. Perform file validation (using tempFilePath)
-                // 1. MIME Type Validation
-                const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif']; // Replace with your allowed types
-                if (!allowedMimeTypes.includes(mimetype)) {
-                    throw new Error(`Invalid MIME type: ${mimetype}. Allowed types: ${allowedMimeTypes.join(', ')}`);
-                }
-
-                // 2. File Size Validation
-                const maxFileSize = 1024 * 1024 * 5; // 5 MB in bytes
-                const stats = await fs.promises.stat(tempFilePath);
-                if (stats.size > maxFileSize) {
-                    throw new Error(`File size exceeds limit: ${stats.size} bytes. Maximum: ${maxFileSize} bytes`);
-                }
-
-                // 3. (Optional) Format Validation (Image Extension)
-                if (mimetype.startsWith('image/')) {
-                    const supportedExtensions = ['.jpg', '.jpeg', '.png', '.gif']; // Replace with your supported extensions
-                    const fileExtension = path.extname(filename).toLowerCase();
-                    if (!supportedExtensions.includes(fileExtension)) {
-                        throw new Error(`Invalid file extension: ${fileExtension}. Supported extensions: ${supportedExtensions.join(', ')}`);
+                        return respbobedant;
                     }
                 }
 
-                // 4. (Optional) Cleanup temporary folder
-                try {
-                    await fs.promises.rmrf(tempFolderName);
-                    console.log('Temporary folder removed:', tempFolderName);
-                } catch (err) {
-                    console.error('Error removing temporary folder:', err);
-                    // Handle error appropriately
-                }
+                let tipoFormato = Object.keys(CONF.MIMESSOPORTADOSAUDIO).indexOf(info.mime);
+                const objnota = { nombre, info, tipo: tipoFormato, formato: tipoFormato };
 
-                // 5. Return response based on validation results
-                // ...
-                //
-                const setnota = new ENTNotas(objnota)
-                const respnotas = await setnota.save()
-                const objbobedant = { bobeda, nombre_carpeta, nota: setnota.clave }
-                const setnotabobeda = new ENTBobedant(objbobedant)
-                const respbobedant = await setnotabobeda.save()
-                return respbobedant
+                const reqtospech = {
+                    config: {
+                        encoding: 'LINEAR16', // Indica que el audio está en base64
+                        sampleRateHertz: 16000, // Tasa de muestreo (ajusta según tu audio)
+                        languageCode: 'es-ES', // Código de idioma (español de España)
+                    },
+                    audio: {
+                        content: info.data, // Reemplaza con tu audio en base64
+                    },
+                };
+
+                // Crear un directorio temporal
+                const tempDir = tmp.dirSync({ unsafeCleanup: true });
+                const tempFilePath = path.join(tempDir.name, 'credentials.json');
+
+                // Asegúrate de que GOOGLE_APPLICATION_CREDENTIALS contenga un JSON válido
+                const credentials = JSON.parse(process.env.GOOGLE_APPLICATION_CREDENTIALS);
+                const jsonString = JSON.stringify(credentials, null, 2);
+
+                // Escribir el contenido en el archivo temporal
+                await fs.writeFile(tempFilePath, jsonString, 'utf8');
+
+                // Establecer la ruta del archivo temporal en la variable de entorno
+                process.env.GOOGLE_APPLICATION_CREDENTIALS = tempFilePath;
+
+                // Crear el cliente de Speech
+                const client_speech = new SpeechClient();
+                const cliente = await client_speech.recognize(reqtospech);
+
+                if (cliente && cliente.results && cliente.results.length > 0) {
+                    const textoReconocido = cliente.results[0].alternatives[0].transcript;
+                    objnota.info = textoReconocido;
+                    const setnota = await ENTNotas.updateOne({ bobeda, nota }, objnota);
+                    const objbobedant = { nombre_carpeta, nota: setnota.clave };
+                    const setnotabobeda = ENTBobedant.updateOne({ bobeda }, objbobedant);
+                    const respbobedant = await ENTBobedant.findOne({ nota, bobeda })
+
+                    return respbobedant;
+                } else {
+                    return new GraphQLError("No se pudo obtener el texto");
+                }
             } catch (err) {
-                console.error('Error creating temporary folder:', err);
-                throw err; // Handle error appropriately
+                return new GraphQLError(err);
+            } finally {
+                tempDir.removeCallback();
             }
         },
     }

@@ -16,6 +16,7 @@ const {
 const MTBobedaprm = {
     POST: {
         type: TYbobedaprm,
+        description:"Almacena el prompt que que recibe",
         args: {
             bobeda: { type: new GraphQLNonNull(GraphQLString) },
             datos: { type: new GraphQLNonNull(GraphQLString) },
@@ -25,9 +26,11 @@ const MTBobedaprm = {
         async resolve(otros, { bobeda, datos, respuesta, nombre_prompt }) {
             try {
                 let status = true
-                const currentuser = global.currentuser
-                let userclave = await UTILS.decrypt(currentuser.clave)
+                let userclave = await UTILS.getCurrentUser()
                 const bobedaobj = await ENTBobeda.findOne({ clave: bobeda, usuario: userclave })
+                if(!bobedaobj){
+                    return {}
+                }
                 //
                 const existenciaConf = await ENTConfiguracion.findOne({ clave: bobedaobj.configuracion })
                 const prmsbobeda = await ENTBobedaprm.countDocuments({ bobeda: bobedaobj.clave })
@@ -57,6 +60,7 @@ const MTBobedaprm = {
     },
     PUT: {
         type: TYbobedaprm,
+        description:"Actualiza el prompt indicado",
         args: {
             prompt: { type: new GraphQLNonNull(GraphQLString) },
             bobeda: { type: new GraphQLNonNull(GraphQLString) },

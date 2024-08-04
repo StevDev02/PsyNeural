@@ -13,6 +13,7 @@ const {
 const MTBobeda = {
     POST: {
         type: TYBobeda,
+        description:"Crea bóvedas el usuario tiene el control pero están limitadas por la configuración",
         args: {
             configuracion: { type: new GraphQLNonNull(GraphQLString) },
             asistente: { type: new GraphQLNonNull(GraphQLString) },
@@ -58,6 +59,7 @@ const MTBobeda = {
     },
     PUT: {
         type: TYBobeda,
+        description:"Actualiza bóvedas el usuario tiene el control pero están limitadas por la configuración",
         args: {
             configuracion: { type: new GraphQLNonNull(GraphQLString) },
             asistente: { type: new GraphQLNonNull(GraphQLString) },
@@ -81,6 +83,7 @@ const MTBobeda = {
     },
     DEL: {
         type: TYBobeda,
+        description:"Elimina bóvedas el usuario tiene el control pero están limitadas por la configuración",
         args: {
             configuracion: { type: new GraphQLNonNull(GraphQLString) },
             asistente: { type: new GraphQLNonNull(GraphQLString) },
