@@ -157,7 +157,7 @@ export function SignupForm() {
         >
           {!loading ? (
             <div className="flex items-center justify-center gap-1">
-              <Lock className="size-3" />
+              <Lock className="size-4" />
               <span>Sign up with Email</span>
             </div>
           ) : (

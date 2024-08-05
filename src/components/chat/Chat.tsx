@@ -1,24 +1,19 @@
 "use client";
-// Icons
-import { CornerDownLeft, Mic, CloudUpload, Eraser } from "lucide-react";
-// UI Components
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
 // Custom Components
 import { DropdownModels } from "../models/DropdownModels";
+import { ClearMessage } from "../buttons/ClearMessage";
+import { SendMessage } from "../buttons/SendMessage";
+import { UploadDocuments } from "../buttons/UploadDocuments";
+import { UseMicrophone } from "../buttons/UseMicrophone";
+import { NewConversation } from "../buttons/NewConversation";
 
 export function Chat() {
   return (
     <div className="flex flex-col gap-1.5 text-center w-full landscape:pt-0 p-4 py-2 sm:p-6 sm:pb-0">
       <div className="flex flex-col overflow-hidden w-full rounded-lg border dark:border-zinc-800 border-zinc-200">
         <Textarea
-          rows={1}
+          rows={2}
           spellCheck
           minLength={1}
           placeholder="How can I help you?..."
@@ -27,57 +22,14 @@ export function Chat() {
         />
         <div className="flex items-center justify-between p-3 sm:pt-4 bg-white dark:bg-zinc-950">
           <div className="flex items-center justify-center gap-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="rounded-full"
-                    disabled
-                    variant="secondary"
-                    size="icon"
-                  >
-                    <CloudUpload className="size-4" />
-                    <span className="sr-only">Attach file</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Attach File</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    className="rounded-full"
-                    variant="secondary"
-                    size="icon"
-                  >
-                    <Mic className="size-4" />
-                    <span className="sr-only">Use Microphone</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Use Microphone</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <UploadDocuments />
+            <UseMicrophone />
             <DropdownModels />
           </div>
           <div className="flex items-center justify-center gap-2">
-            <Button
-              type="reset"
-              variant="outline"
-              size="sm"
-              className="flex items-center justify-center gap-1.5"
-            >
-              <span className="hidden sm:flex">Clean Message</span>
-              <Eraser className="size-3.5" />
-            </Button>
-            <Button
-              type="submit"
-              size="sm"
-              className="flex items-center justify-center gap-1.5"
-            >
-              <span className="hidden sm:flex">Send Message</span>
-              <CornerDownLeft className="size-3.5" />
-            </Button>
+            <NewConversation />
+            <ClearMessage />
+            <SendMessage />
           </div>
         </div>
       </div>

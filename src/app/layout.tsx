@@ -2,11 +2,26 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/themeprovider";
 import { Metadata } from "next";
 import { InterFont } from "@/utils/fonts";
+import { Suspense } from "react";
+import Loading from "./loading";
 
 const baseURL = "https://psyneural.vercel.app";
 const AppName = "PsyNeural";
 
 export const metadata: Metadata = {
+  description:
+    "PsychNeural AI uses advanced technology to diagnose and treat mental health conditions, offering innovative and personalized solutions. Our AI-driven approach aims to improve patient outcomes and enhance overall mental wellness.".substring(
+      0,
+      200
+    ),
+  keywords: [
+    "Artificial Intelligence",
+    "AI",
+    "Online Chat",
+    "Psychology",
+    "Technology",
+    "Mental Health",
+  ],
   metadataBase: new URL(baseURL),
   appleWebApp: true,
   generator: "Next.js",
@@ -33,13 +48,13 @@ export const metadata: Metadata = {
   alternates: {
     canonical: baseURL,
     languages: {
-      en: "MX",
+      en: "US",
     },
   },
   icons: {
-    icon: "./favicon.ico",
-    shortcut: "./favicon.ico",
-    apple: "./apple-icon.png",
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+    apple: "/apple-icon.png",
   },
   title: {
     default: "Neural psychological AI",
@@ -57,12 +72,12 @@ export const metadata: Metadata = {
         200
       ),
     type: "website",
-    locale: "en_MX",
+    locale: "en_US",
     url: `${baseURL}`,
     siteName: AppName,
     images: [
       {
-        url: `${baseURL}/og.webp`,
+        url: "/og.webp",
         width: "1200",
         height: "630",
         alt: "og",
@@ -85,7 +100,7 @@ export const metadata: Metadata = {
     creator: `@${AppName}`,
     images: [
       {
-        url: `${baseURL}/og.webp`,
+        url: "/og.webp",
         width: "1200",
         height: "630",
         alt: "og",
@@ -107,15 +122,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className={InterFont.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-          storageKey="theme"
-        >
-          {children}
-        </ThemeProvider>
+        <Suspense fallback={<Loading />}>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+            storageKey="theme"
+          >
+            {children}
+          </ThemeProvider>
+        </Suspense>
       </body>
     </html>
   );

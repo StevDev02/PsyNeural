@@ -11,7 +11,13 @@ import { Button } from "@/components/ui/button";
 // Meteors
 import { Meteors } from "@/components/custom/animations/Meteors";
 
-export default function Signin() {
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "VerifyEmail",
+};
+
+export default function VerifyEmail() {
   return (
     <main className="flex min-h-dvh items-center justify-around mx-auto text-sm p-6">
       <Card className="relative flex flex-col overflow-hidden p-8 gap-4 w-[400px]">
@@ -25,7 +31,7 @@ export default function Signin() {
           </p>
         </CardHeader>
         <CardContent>
-          {/* <!-- ========== RETURN TO LOGIN ========== --> */}
+          {/* <!-- ========== RETURN TO SIGNIN ========== --> */}
           <div className="flex items-center justify-center text-center">
             <Link
               title="Return to Signin Link"

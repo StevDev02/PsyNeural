@@ -1,5 +1,3 @@
-// ThemeToggle
-import { ThemeToggle } from "@/components/themetoggle";
 // Next Components
 import Link from "next/link";
 // UI Components
@@ -19,6 +17,12 @@ import { SigninForm } from "@/components/auth/signin/SigninForm";
 import { NormalFace } from "@/components/custom/spline/NormalFace";
 // Meteors
 import { Meteors } from "@/components/custom/animations/Meteors";
+
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Signin",
+};
 
 export default function Signin() {
   return (

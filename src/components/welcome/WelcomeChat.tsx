@@ -1,23 +1,15 @@
 "use client";
-import React, {
-  forwardRef,
-  Suspense,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { forwardRef, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 // UI Components
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 // Custom UI Components
 import { AnimatedBeam } from "../magicui/AnimatedBeam";
-import { FlipWords } from "../custom/animations/FlipWords";
-import Particles from "../magicui/particles";
+import Particles from "../magicui/Particles";
 import GradualSpacing from "../magicui/GradualSpacing";
 // Icons
 import { User2 } from "lucide-react";
 import { useTheme } from "next-themes";
-import Loading from "@/app/loading";
 
 const Circle = forwardRef<
   HTMLDivElement,

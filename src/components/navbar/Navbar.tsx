@@ -12,71 +12,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-// Next Components
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 // Custom UI Components
 import ProfileAccount from "../profile/ProfileAccount";
 // Icons
 import { GithubIcon } from "@/components/custom/icons/GithubIcon";
-import {
-  User2,
-  AlignLeft,
-  LucideLayoutDashboard,
-  BotIcon,
-  BookHeart,
-  House,
-  Headset,
-  Terminal,
-  CircleHelp,
-  Bug,
-} from "lucide-react";
+import { User2, AlignLeft, Bug } from "lucide-react";
 import SignoutBtn from "../auth/signout/SignoutBtn";
 import SettingsAccount from "../settings/SettingsAccount";
-
-const SidebarLinks = [
-  {
-    label: "Home",
-    icon: <House className="size-4" />,
-    ref: "/",
-  },
-  {
-    label: "Dashboard",
-    icon: <LucideLayoutDashboard className="size-4" />,
-    ref: "/dashboard",
-  },
-  {
-    label: "Playground",
-    icon: <BotIcon className="size-4" />,
-    ref: "/dashboard/playground",
-  },
-  {
-    label: "Documentation",
-    icon: <BookHeart className="size-4" />,
-    ref: "/docs",
-  },
-  {
-    label: "API",
-    icon: <Terminal className="size-4" />,
-    ref: "/docs/api",
-  },
-  {
-    label: "Support",
-    icon: <Headset className="size-4" />,
-    ref: "/support",
-  },
-  {
-    label: "About us",
-    icon: <CircleHelp className="size-4" />,
-    ref: "/about",
-  },
-];
+import GeneralRouting from "../routing/GeneralRouting";
 
 export default function Navbar({ title }: { title: string }) {
-  const pathname = usePathname();
   return (
-    <div className="h-20 w-full flex justify-between px-5 items-center landscape:hidden lg:landscape:flex">
+    <div className="h-20 w-full flex justify-between px-5 items-center">
       {/* <!-- ========== SIDEBAR ========== --> */}
       <div className="flex items-center justify-center gap-2">
         <Sheet>
@@ -104,33 +51,14 @@ export default function Navbar({ title }: { title: string }) {
               <p className="text-xl font-extrabold tracking-wide">PsyNeural</p>
             </div>
             {/* <!-- ========== LINKS ========== --> */}
-            <ul className="flex flex-col py-2 gap-1.5 font-semibold text-sm">
-              <p className="font-bold text-base">Menu</p>
-              <Separator />
-              {SidebarLinks.map((link) => (
-                <Link
-                  role="link"
-                  title={`${link.label} | Psyneural`}
-                  aria-label={`${link.label} | Psyneural`}
-                  className={`flex items-center justify-start gap-2 p-2 rounded-md ${
-                    pathname === link.ref
-                      ? "active dark:hover:bg-zinc-200 hover:bg-zinc-800 bg-zinc-950 text-white dark:bg-zinc-100 dark:text-zinc-950"
-                      : "hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  }`}
-                  href={link.ref}
-                  prefetch
-                >
-                  {link.icon}
-                  <span>{link.label}</span>
-                </Link>
-              ))}
-            </ul>
+            <GeneralRouting />
           </SheetContent>
         </Sheet>
         {/* <!-- ========== TITLE ========== --> */}
-        <h1 className="font-bold text-2xl">{title}</h1>
+        <h1 className="font-bold text-2xl sm:text-3xl">{title}</h1>
       </div>
       <div className="flex items-center justify-center gap-2">
+        {/* <!-- ========== THEME TOGGLE ========== --> */}
         <ThemeToggle />
         {/* <!-- ========== ACCOUNT SETTINGS ========== --> */}
         <DropdownMenu>

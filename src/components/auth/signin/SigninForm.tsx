@@ -98,8 +98,12 @@ export function SigninForm() {
               <div className="flex justify-between items-center">
                 <FormLabel>Password</FormLabel>
                 <Link
+                  title="Forgot Password"
+                  aria-label="Forgot Password"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="hover:underline hover:animate-pulse font-semibold"
-                  href="/auth/forgotPassword"
+                  href="/auth/resetPassword"
                 >
                   Forgot Password?
                 </Link>

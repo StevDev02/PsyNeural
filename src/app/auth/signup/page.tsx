@@ -19,6 +19,12 @@ import { NormalFace } from "@/components/custom/spline/NormalFace";
 // Meteors
 import { Meteors } from "@/components/custom/animations/Meteors";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Signup",
+};
+
 export default function Signup() {
   return (
     <main className="flex min-h-dvh items-center justify-around mx-auto text-sm p-6">

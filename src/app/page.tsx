@@ -1,5 +1,8 @@
-import { ThemeToggle } from "@/components/themetoggle";
-import Image from "next/image";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Home",
+};
 
 export default function Home() {
   return (

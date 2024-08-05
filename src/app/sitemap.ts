@@ -1,7 +1,18 @@
 import { MetadataRoute } from "next";
+import { getAllPosts } from "@/lib/api";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseURL = "https://psyneural.vercel.app";
+
+  const response = await getAllPosts();
+
+  const blogPosts = response?.map((post: any) => {
+    return {
+      url: `${baseURL}/docs/blog/posts/${post?.slug}`,
+      lastModified: `${post?.date}`,
+    };
+  });
+
   return [
     {
       url: `${baseURL}/`,
@@ -34,13 +45,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
-      url: `${baseURL}/docs/api`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.8,
-    },
-    {
-      url: `${baseURL}/docs`,
+      url: `${baseURL}/docs/blog`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
@@ -75,5 +80,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 1.0,
     },
+    ...blogPosts,
   ];
 }

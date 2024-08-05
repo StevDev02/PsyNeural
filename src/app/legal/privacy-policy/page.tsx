@@ -1,8 +1,10 @@
-import { ThemeToggle } from "@/components/themetoggle";
-import Image from "next/image";
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+};
 
 export default function PrivacyPolicy() {
-  return (
-    <main className="flex min-h-dvh items-center justify-center p-8"></main>
-  );
+  return notFound();
 }
