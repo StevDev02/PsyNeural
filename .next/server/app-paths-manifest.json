@@ -1,0 +1,6 @@
+{
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/docs/blog/page": "app/docs/blog/page.js",
+  "/dashboard/playground/page": "app/dashboard/playground/page.js",
+  "/docs/blog/posts/[slug]/page": "app/docs/blog/posts/[slug]/page.js"
+}

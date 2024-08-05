@@ -1,11 +1,10 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Home",
 };
 
 export default function Home() {
-  return (
-    <main className="flex w-full h-auto items-center justify-center p-8"></main>
-  );
+  return notFound();
 }

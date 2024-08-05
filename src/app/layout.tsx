@@ -1,7 +1,10 @@
 import "./globals.css";
-import { ThemeProvider } from "@/components/themeprovider";
+
+import React from "react";
+
+import { ThemeProvider } from "../components/themeprovider";
 import { Metadata } from "next";
-import { InterFont } from "@/utils/fonts";
+import { InterFont } from "../utils/fonts";
 import { Suspense } from "react";
 import Loading from "./loading";
 
